@@ -4,7 +4,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 import random
-
+#import js2py
 
 
 
@@ -57,24 +57,60 @@ def showSignin():
 
 @app.route('/viewDesk')
 def viewDesk():
-	con = mysql.connect()
-	cursor = con.cursor()
-	cursor.callproc('sp_getDesk')
-	desks = cursor.fetchall()
-	desk = random.choice(desks)
-	photo = desk[4]
-	cursor.close()
-	cursor = con.cursor()
-	cursor.callproc('sp_getUserNickName', (desk[5],))
-	user = cursor.fetchall()
-	userNickName = user[0]
-	print(user)
-	#user string needs to be changed
-	return render_template('viewDesk.html', NextDesks =photo, nickName = userNickName )
+    con = mysql.connect()
+    cursor = con.cursor()
+    cursor.callproc('sp_getDesk')
+    desks = cursor.fetchall()
+    desk = random.choice(desks)
+    photo = desk[4]
+    desk_num = desk[0]
+    print(desk_num)
+    cursor.close()
+    cursor = con.cursor()
+    cursor.callproc('sp_getUserNickName', (desk[5],))
+    user = cursor.fetchall()
+    userNickName = user[0]
+    print(user)
+    #user string needs to be changed
+    return render_template('viewDesk.html', desk_id = desk_num, NextDesks =photo, nickName = userNickName )
 
-def blobToImage(data,filename):
-	with open(filename, 'wb') as f:
-		f.write(data)
+
+@app.route('/showComment')
+def showComment():
+    if session.get('user'):
+        return render_template('comment.html')
+    else:
+       return render_template('error.html',error = 'Unauthorized Access')
+
+@app.route('/showAddComment')
+def showAddComment():
+    return render_template('addComment.html')
+
+@app.route('/getComment')
+def getComment():
+    try:
+        if session.get('user'):
+            _user = session.get('user')
+
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.callproc('sp_getCommentByDesk',(2,))
+            wishes = cursor.fetchall()
+
+            wishes_dict = []
+            for wish in wishes:
+                wish_dict = {
+                        'Id': wish[0],
+                        'Title': wish[1],
+                        'Date': wish[2],
+                        }
+                wishes_dict.append(wish_dict)
+
+            return json.dumps(wishes_dict)
+        else:
+            return render_template('error.html', error = 'Unauthorized Access')
+    except Exception as e:
+        return render_template('error.html', error = str(e))
 
 @app.route('/userHome')
 def userHome():
@@ -186,6 +222,37 @@ def addDesk():
     finally:
         cursor.close()
         conn.close()
+
+@app.route('/addComment',methods=['post'])
+def addComment():
+    try:
+        if session.get('user'):
+
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            _title = request.form['inputDescription']
+            _user = session.get('user')
+            _desk_id = 2
+            print(_desk_id)
+            
+            cursor.callproc('sp_addComment',(_title,_desk_id,_user))
+            data = cursor.fetchall()
+
+            if len(data) is 0:
+                conn.commit()
+                return redirect('/showComment')
+            else:
+                return render_template('error.html',error = 'An error occurred!')
+
+        else:
+            return render_template('error.html',error = 'Unauthorized Access')
+    except Exception as e:
+        return render_template('error.html',error = str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 
 if __name__ == "__main__":
