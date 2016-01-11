@@ -1,6 +1,16 @@
+# encoding=utf8 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+#import random
+#from deskDB import desks
+
+
 from flask import Flask, render_template, request , json, session, redirect
 from flask.ext.mysql import MySQL
-from werkzeug import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+import string
 
 app = Flask(__name__)
 mysql = MySQL()
@@ -10,7 +20,7 @@ app.secret_key = 'why would I tell you my secret key?'
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'dbgood'
 app.config['MYSQL_DATABASE_DB'] = 'dbDeskProject'
-#app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
 
 
@@ -39,7 +49,7 @@ def userHome():
     if session.get('user'):
         return render_template('userHome.html')
     else:
-        return render_template('error.html',error = 'Unauthorized Access')
+       return render_template('error.html',error = 'Unauthorized Access')
 
 @app.route('/logout')
 def logout():
@@ -58,18 +68,16 @@ def validateLogin():
 
         con = mysql.connect()
         cursor = con.cursor()
-        cursor.callproc('sp_validateLogin',(_username))
+        cursor.callproc('sp_validateLogin',(_username,))
         data = cursor.fetchall()
-
-        
-
+        print(data)
 
         if len(data) > 0:
             if check_password_hash(str(data[0][3]),_password):
-                session['user'] = data[0][0]
-                return redirect('/userHome')
+               session['user'] = data[0][0]
+               return redirect('/userHome')
             else:
-                return render_template('error.html',error = 'Wrong Email address or Password.')
+               return render_template('error.html',error = 'Wrong NikcName or Password.')
         else:
             return render_template('error.html',error = 'Wrong Email address or Password.')
             
@@ -111,9 +119,36 @@ def signUp():
 		conn.close()
 
 
+@app.route('/showAddDesk')
+def showAddDesk():
+    return render_template('addDesk.html')
 
+@app.route('/addWish',methods=['POST'])
+def addWish():
+    try:
+        if session.get('user'):
+            _title = request.form['inputTitle']
+            _img = request.form['pic']
+            _user = session.get('user')
 
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            cursor.callproc('sp_addDesk',(_title,_img,_user))
+            data = cursor.fetchall()
 
+            if len(data) is 0:
+                conn.commit()
+                return redirect('/userHome')
+            else:
+                return render_template('error.html',error = 'An error occurred!')
+
+        else:
+            return render_template('error.html',error = 'Unauthorized Access')
+    except Exception as e:
+        return render_template('error.html',error = str(e))
+    finally:
+        cursor.close()
+        conn.close()
 
 
 if __name__ == "__main__":
