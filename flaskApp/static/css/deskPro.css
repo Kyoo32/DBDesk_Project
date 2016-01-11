@@ -99,11 +99,15 @@ a{
 }
 .icon-sudo-hover #person-icon{
 	background-image : url("/static/person.svg");
-	left: calc(38% - 50px);
+	left: calc(25% - 50px);
 } 
+.icon-sudo-hover #comment-icon{
+	background-image: url("/static/bubble.svg");
+	left: calc(50% - 50px);
+}
 .icon-sudo-hover #reload-icon{
 	background-image : url("/static/spin.svg");
-	left: calc(62% - 50px);
+	left: calc(75% - 50px);
 } 
 #nick-name{
 	position: absolute;

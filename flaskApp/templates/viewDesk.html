@@ -17,6 +17,7 @@
 			</div>
 			<div class="icon-sudo-hover">
 				<div id="person-icon"> </div>
+				<div id="comment-icon"></div>
 				<div id="reload-icon" > </div>
 			</div>
 			<div id="nick-name">{{nickName}}</div>
@@ -39,6 +40,12 @@
 	iconLoad.addEventListener("click", function(){
 		location.reload();
 	});
+
+	var iconComment = document.getElementById("comment-icon");
+	iconComment.addEventListener("click", function(){
+		window.location = "/"
+	});
+
 
 	var iconName = document.getElementById("person-icon");
 	iconName.addEventListener("click", function(){
