@@ -3,14 +3,16 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-#import random
-#from deskDB import desks
+import random
 
 
-from flask import Flask, render_template, request , json, session, redirect
+
+
+from flask import Flask, url_for, render_template, request , json, session, redirect
 from flask.ext.mysql import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
-import string
+import uuid
+import os
 
 app = Flask(__name__)
 mysql = MySQL()
@@ -21,6 +23,7 @@ app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'dbgood'
 app.config['MYSQL_DATABASE_DB'] = 'dbDeskProject'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['UPLOAD_FOLDER'] = 'static/Uploads'
 mysql.init_app(app)
 
 
@@ -30,6 +33,14 @@ mysql.init_app(app)
 def main():
 	return render_template('index.html')
 
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
+    if request.method == 'POST':
+    	file = request.files['file']
+        extension = os.path.splitext(file.filename)[1]
+    	f_name = str(uuid.uuid4()) + extension
+    	file.save(os.path.join(app.config['UPLOAD_FOLDER'], f_name))
+        return json.dumps({'filename':f_name})
 
 
 @app.route("/showSignUp")
@@ -43,6 +54,27 @@ def showSignin():
         return render_template('userHome.html')
     else:
         return render_template('signin.html')
+
+@app.route('/viewDesk')
+def viewDesk():
+	con = mysql.connect()
+	cursor = con.cursor()
+	cursor.callproc('sp_getDesk')
+	desks = cursor.fetchall()
+	desk = random.choice(desks)
+	photo = desk[4]
+	cursor.close()
+	cursor = con.cursor()
+	cursor.callproc('sp_getUserNickName', (desk[5],))
+	user = cursor.fetchall()
+	userNickName = user[0]
+	print(user)
+	#user string needs to be changed
+	return render_template('viewDesk.html', NextDesks =photo, nickName = userNickName )
+
+def blobToImage(data,filename):
+	with open(filename, 'wb') as f:
+		f.write(data)
 
 @app.route('/userHome')
 def userHome():
@@ -123,17 +155,22 @@ def signUp():
 def showAddDesk():
     return render_template('addDesk.html')
 
-@app.route('/addWish',methods=['POST'])
-def addWish():
+@app.route('/addDesk',methods=['POST'])
+def addDesk():
     try:
         if session.get('user'):
             _title = request.form['inputTitle']
-            _img = request.form['pic']
             _user = session.get('user')
+
+            if request.form.get('filePath') is None:
+                _filePath = ''
+            else:
+                _filePath = request.form.get('filePath')
+          
 
             conn = mysql.connect()
             cursor = conn.cursor()
-            cursor.callproc('sp_addDesk',(_title,_img,_user))
+            cursor.callproc('sp_addDesk',(_title,_filePath,_user))
             data = cursor.fetchall()
 
             if len(data) is 0:
