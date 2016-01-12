@@ -50,8 +50,8 @@ def showSignUp():
 
 @app.route('/showSignin')
 def showSignin():
-    if session.get('user'):
-        return render_template('userHome.html')
+    if session.get('user_name'):
+        return render_template('userHome.html',user_name=session.get('user_name'))
     else:
         return render_template('signin.html')
 
@@ -116,13 +116,15 @@ def getComment():
 @app.route('/userHome')
 def userHome():
     if session.get('user'):
-        return render_template('userHome.html')
+        return render_template('userHome.html', user_name = session.get('user_name'))
     else:
        return render_template('error.html',error = 'Unauthorized Access')
 
 @app.route('/logout')
 def logout():
     session.pop('user',None)
+    session.pop('user_name',None)
+    session.pop('desk_num',None)
     return redirect('/')
 
 @app.route('/validateLogin',methods=['POST'])
@@ -144,6 +146,8 @@ def validateLogin():
         if len(data) > 0:
             if check_password_hash(str(data[0][3]),_password):
                session['user'] = data[0][0]
+               print data
+               session['user_name'] = data[0][1]
                return redirect('/userHome')
             else:
                return render_template('error.html',error = 'Wrong NikcName or Password.')
