@@ -3,8 +3,8 @@
 {%block title%} {{super()}}{%endblock%}
 {%block css%}
  "/static/css/deskPro.css" {%endblock%}
-{%block script%} <script type="text/javascript"
- src="../static/js/jquery.cookie.js"> </script>{%endblock%}
+{%block script%} <script
+ src="https://cdn.jsdelivr.net/jquery.cookie/1.4.1/jquery.cookie.js"> </script>{%endblock%}
 {%block header%}
     <!--[header]-->
 	<header id = "header">
@@ -46,13 +46,29 @@
 
 	var iconComment = document.getElementById("comment-icon");
 	iconComment.addEventListener("click", function(){
-		window.location = "/showComment";
-		var desk_num = document.getElementById("deskImage");
-		desk_num = desk_num.getAttribute('name');
+		var desk_element = document.getElementById("deskImage");
+		var desk_num = desk_element.getAttribute('name');
+		console.log(desk_num)
 		document.cookie = "desk_id=" + desk_num;
-		$.cookie('desk_id', desk_num);
+		window.location = "/showComment";
+
+		
+		
+		// $(function setCookie()
+		// {
+		// 	// value to set in the cookie
+			
+			
+		// 	// sets the cookie
+		// 	$.cookie('desk_id', desk_num);
+		// 	//console.log($.cookie());
+		// 	//log('Cookie ' + desk_num + ' has been set.');
+		// });
+			
 
 	});
+
+	
 
 
 	var iconName = document.getElementById("person-icon");

@@ -1,4 +1,4 @@
-# encoding=utf8 
+    # encoding=utf8 
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -64,6 +64,7 @@ def viewDesk():
     desk = random.choice(desks)
     photo = desk[4]
     desk_num = desk[0]
+    session['desk_num'] = desk_num
     print(desk_num)
     cursor.close()
     cursor = con.cursor()
@@ -91,10 +92,10 @@ def getComment():
     try:
         if session.get('user'):
             _user = session.get('user')
-
+            _desk_num = session.get('desk_num')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.callproc('sp_getCommentByDesk',(2,))
+            cursor.callproc('sp_getCommentByDesk',(_desk_num,))
             wishes = cursor.fetchall()
 
             wishes_dict = []
@@ -231,7 +232,7 @@ def addComment():
             cursor = conn.cursor()
             _title = request.form['inputDescription']
             _user = session.get('user')
-            _desk_id = 2
+            _desk_id = session.get('desk_num')
             print(_desk_id)
             
             cursor.callproc('sp_addComment',(_title,_desk_id,_user))
