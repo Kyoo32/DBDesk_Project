@@ -165,20 +165,19 @@ def signUp():
 		_password = request.form['inputPassword']
 
 		if _name and _nickName and _password:
+
 			conn = mysql.connect()
 			cursor = conn.cursor()
 			_hashed_password = generate_password_hash(_password)
 			cursor.callproc('sp_createUser',(_name,_nickName,_hashed_password))
 			data = cursor.fetchall()
-	 
-			if len(data) is 0:
-	   			conn.commit()
-	    		return json.dumps({'message':'User created successfully !'})
-	    	else: 
+			if len(data) is 0 :
+				conn.commit()
+				return json.dumps({'message':'User created successfully !'})
+			else:
 				return json.dumps({'error':str(data[0])})
-
-		#else:
-		#	return json.dumps({'html':'<span>Enter the required fields</span>'})
+		else:
+			return json.dumps({'html':'<span>Enter the required fields</span>'})
 			
 	except Exception as e:
 		return json.dumps({'error':str(e)})
